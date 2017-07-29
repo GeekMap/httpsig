@@ -9,4 +9,8 @@ python:
 install:
   - pip install .
   - pip install nose
-script: nosetests
+  - pip install coveralls
+script:
+  coverage run --source=httpsig setup.py test
+after_success:
+  coveralls
