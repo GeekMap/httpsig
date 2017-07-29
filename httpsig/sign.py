@@ -9,26 +9,27 @@ from .utils import *
 
 
 DEFAULT_SIGN_ALGORITHM = "hmac-sha256"
+DEFAULT_VERSION = 'draft-07'
 
 
 class Signer(object):
     """
     When using an RSA algo, the secret is a PEM-encoded private key.
     When using an HMAC algo, the secret is the HMAC signing secret.
-    
+
     Password-protected keyfiles are not supported.
     """
     def __init__(self, secret, algorithm=None):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
-        
+
         assert algorithm in ALGORITHMS, "Unknown algorithm"
         if isinstance(secret, six.string_types): secret = secret.encode("ascii")
-        
+
         self._rsa = None
         self._hash = None
         self.sign_algorithm, self.hash_algorithm = algorithm.split('-')
-        
+
         if self.sign_algorithm == 'rsa':
             try:
                 rsa_key = RSA.importKey(secret)
@@ -36,7 +37,7 @@ class Signer(object):
                 self._hash = HASHES[self.hash_algorithm]
             except ValueError:
                 raise HttpSigException("Invalid key.")
-            
+
         elif self.sign_algorithm == 'hmac':
             self._hash = HMAC.new(secret, digestmod=HASHES[self.hash_algorithm])
 
@@ -78,13 +79,14 @@ class HeaderSigner(Signer):
     :arg algorithm: one of the six specified algorithms
     :arg headers:   a list of http headers to be included in the signing string, defaulting to ['date'].
     '''
-    def __init__(self, key_id, secret, algorithm=None, headers=None):
+    def __init__(self, key_id, secret, algorithm=None, headers=None, version=DEFAULT_VERSION):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
-        
+
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(key_id, algorithm, headers)
+        self.version = version
 
     def sign(self, headers, host=None, method=None, path=None):
         """
@@ -98,9 +100,8 @@ class HeaderSigner(Signer):
         headers = CaseInsensitiveDict(headers)
         required_headers = self.headers or ['date']
         signable = generate_message(required_headers, headers, host, method, path)
-        
+
         signature = self._sign(signable)
         headers['authorization'] = self.signature_template % signature
-        
-        return headers
 
+        return headers

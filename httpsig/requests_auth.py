@@ -6,7 +6,7 @@ except ImportError:
     # Python 2
     from urlparse import urlparse
 
-from .sign import HeaderSigner
+from .sign import HeaderSigner, DEFAULT_VERSION
 
 
 class HTTPSignatureAuth(AuthBase):
@@ -19,10 +19,10 @@ class HTTPSignatureAuth(AuthBase):
     algorithm is one of the six specified algorithms
     headers is a list of http headers to be included in the signing string, defaulting to "Date" alone.
     '''
-    def __init__(self, key_id='', secret='', algorithm=None, headers=None):
+    def __init__(self, key_id='', secret='', algorithm=None, headers=None, version=DEFAULT_VERSION):
         headers = headers or []
         self.header_signer = HeaderSigner(key_id=key_id, secret=secret,
-                algorithm=algorithm, headers=headers)
+                algorithm=algorithm, headers=headers, version=version)
         self.uses_host = 'host' in [h.lower() for h in headers]
 
     def __call__(self, r):
