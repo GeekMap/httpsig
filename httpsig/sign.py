@@ -9,8 +9,8 @@ from .utils import ALGORITHMS, HASHES, HttpSigException, build_signature_templat
 
 
 DEFAULT_SIGN_ALGORITHM = 'hmac-sha256'
-DEFAULT_DRAFT_VERSION = 'draft-07'
-SUPPORTED_DRAFT_VERSION = ['draft-00', 'draft-01', 'draft-02', 'draft-03', 'draft-04', 'draft-05', 'draft-06', 'draft-07']
+DEFAULT_HTTPSIG_VERSION = 'draft-07'
+SUPPORTED_HTTPSIG_VERSION = ['draft-00', 'draft-01', 'draft-02', 'draft-03', 'draft-04', 'draft-05', 'draft-06', 'draft-07']
 
 
 class Signer(object):
@@ -87,17 +87,17 @@ class HeaderSigner(Signer):
     :arg algorithm: one of the six specified algorithms
     :arg headers:   a list of http headers to be included in the signing string, defaulting to ['date'].
     '''
-    def __init__(self, key_id, secret, algorithm=None, headers=None, version=DEFAULT_DRAFT_VERSION):
+    def __init__(self, key_id, secret, algorithm=None, headers=None, version=DEFAULT_HTTPSIG_VERSION):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(key_id, algorithm, headers)
-        if version in SUPPORTED_DRAFT_VERSION:
+        if version in SUPPORTED_HTTPSIG_VERSION:
             self.version = version
         else:
-            self.version = DEFAULT_DRAFT_VERSION
+            self.version = DEFAULT_HTTPSIG_VERSION
         self._verify_headers_by_draft_version()
 
     def sign(self, headers, host=None, method=None, path=None):

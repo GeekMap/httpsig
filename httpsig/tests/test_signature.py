@@ -78,7 +78,8 @@ class TestSign(unittest.TestCase):
             'draft-04': '(request-target)',
             'draft-05': '(request-target)',
             'draft-06': '(request-target)',
-            'draft-07': '(request-target)'
+            'draft-07': '(request-target)',
+            None: '(request-target)'
         }
         for draft, header_req in testcases.items():
             hs = sign.HeaderSigner(key_id='Test', secret=self.key, version=draft, headers=[
@@ -100,6 +101,16 @@ class TestSign(unittest.TestCase):
             ('draft-02', '(request-target)'),
             ('draft-03', 'request-line'),
             ('draft-03', '(request-line)'),
+            ('draft-04', 'request-line'),
+            ('draft-04', '(request-line)'),
+            ('draft-05', 'request-line'),
+            ('draft-05', '(request-line)'),
+            ('draft-06', 'request-line'),
+            ('draft-06', '(request-line)'),
+            ('draft-07', 'request-line'),
+            ('draft-07', '(request-line)'),
+            (None, 'request-line'),
+            (None, '(request-line)'),
         ]
         for draft, header_req in testcases:
             try:
