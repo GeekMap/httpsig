@@ -87,17 +87,17 @@ class HeaderSigner(Signer):
     :arg algorithm: one of the six specified algorithms
     :arg headers:   a list of http headers to be included in the signing string, defaulting to ['date'].
     '''
-    def __init__(self, key_id, secret, algorithm=None, headers=None, version=DEFAULT_HTTPSIG_VERSION):
+    def __init__(self, key_id, secret, algorithm=None, headers=None, httpsig_version=DEFAULT_HTTPSIG_VERSION):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(key_id, algorithm, headers)
-        if version in SUPPORTED_HTTPSIG_VERSION:
-            self.version = version
+        if httpsig_version in SUPPORTED_HTTPSIG_VERSION:
+            self.httpsig_version = httpsig_version
         else:
-            self.version = DEFAULT_HTTPSIG_VERSION
+            self.httpsig_version = DEFAULT_HTTPSIG_VERSION
         self._verify_headers_by_draft_version()
 
     def sign(self, headers, host=None, method=None, path=None):
@@ -126,5 +126,5 @@ class HeaderSigner(Signer):
 
         for header, drafts in HEADER_MAPING.items():
             if header in self.headers:
-                if self.version not in drafts:
-                    raise KeyError('%s is not supported by %s' % (header, self.version))
+                if self.httpsig_version not in drafts:
+                    raise KeyError('%s is not supported by %s' % (header, self.httpsig_version))

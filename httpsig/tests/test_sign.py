@@ -81,8 +81,8 @@ class TestSign(unittest.TestCase):
             'draft-07': '(request-target)',
             None: '(request-target)'
         }
-        for draft, header_req in testcases.items():
-            hs = sign.HeaderSigner(key_id='Test', secret=self.key, version=draft, headers=[
+        for httpsig_version, header_req in testcases.items():
+            hs = sign.HeaderSigner(key_id='Test', secret=self.key, httpsig_version=httpsig_version, headers=[
                 header_req,
                 'host',
                 'date',
@@ -112,9 +112,9 @@ class TestSign(unittest.TestCase):
             (None, 'request-line'),
             (None, '(request-line)'),
         ]
-        for draft, header_req in testcases:
+        for httpsig_version, header_req in testcases:
             try:
-                sign.HeaderSigner(key_id='Test', secret=self.key, version=draft, headers=[
+                sign.HeaderSigner(key_id='Test', secret=self.key, httpsig_version=httpsig_version, headers=[
                     header_req,
                     'host',
                     'date',
@@ -122,6 +122,6 @@ class TestSign(unittest.TestCase):
                     'content-md5',
                     'content-length'
                 ])
-                self.fail('Should raise KeyError in (%s, %s)' % (draft, header_req))
+                self.fail('Should raise KeyError in (%s, %s)' % (httpsig_version, header_req))
             except KeyError:
                 pass
