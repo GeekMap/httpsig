@@ -1,7 +1,7 @@
 import re
-import struct
 import hashlib
 import base64
+from functools import reduce
 import six
 
 try:
@@ -11,11 +11,10 @@ except ImportError:
     # Python 2
     from urllib2 import parse_http_list
 
-from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA, SHA256, SHA512
 
 ALGORITHMS = frozenset(['rsa-sha1', 'rsa-sha256', 'rsa-sha512', 'hmac-sha1', 'hmac-sha256', 'hmac-sha512'])
-HASHES = {'sha1':   SHA,
+HASHES = {'sha1': SHA,
           'sha256': SHA256,
           'sha512': SHA512}
 
@@ -23,27 +22,23 @@ HASHES = {'sha1':   SHA,
 class HttpSigException(Exception):
     pass
 
-"""
-Constant-time string compare.
-http://codahale.com/a-lesson-in-timing-attacks/
-"""
-def ct_bytes_compare(a, b):
-    if not isinstance(a, six.binary_type):
-        a = a.decode('utf8')
-    if not isinstance(b, six.binary_type):
-        b = b.decode('utf8')
 
-    if len(a) != len(b):
+def ct_bytes_compare(byte_l, byte_r):
+    """
+    Constant-time string compare.
+    http://codahale.com/a-lesson-in-timing-attacks/
+    """
+    if not isinstance(byte_l, six.binary_type):
+        byte_l = byte_l.decode('utf8')
+    if not isinstance(byte_r, six.binary_type):
+        byte_r = byte_r.decode('utf8')
+
+    if len(byte_l) != len(byte_r):
         return False
 
-    result = 0
-    for x, y in zip(a, b):
-        if six.PY2:
-            result |= ord(x) ^ ord(y)
-        else:
-            result |= x ^ y
+    result = reduce(lambda r, b: r | (b[0] ^ b[1]), map(lambda b: (ord(b[0]), ord(b[1])) if six.PY2 else b, zip(byte_l, byte_r)), 0)
 
-    return (result == 0)
+    return result == 0
 
 
 def generate_message(required_headers, headers, host=None, method=None, path=None, http_version=None):
@@ -53,46 +48,46 @@ def generate_message(required_headers, headers, host=None, method=None, path=Non
         required_headers = ['date']
 
     signable_list = []
-    for h in required_headers:
-        h = h.lower()
-        if h == '(request-target)':  # draft-03 to draft-07
+    for header in required_headers:
+        header = header.lower()
+        if header == '(request-target)':  # draft-03 to draft-07
             if not method or not path:
-                raise Exception('method and path arguments required when using "(request-target)"')
-            signable_list.append('%s: %s %s' % (h, method.lower(), path))
-        elif h == '(request-line)':  # draft-02
+                raise KeyError('method and path arguments required when using "(request-target)"')
+            signable_list.append('%s: %s %s' % (header, method.lower(), path))
+        elif header == '(request-line)':  # draft-02
             if not method or not path:
-                raise Exception('method and path arguments required when using "(request-line)"')
-            signable_list.append('%s: %s %s' % (h, method.lower(), path))
-        elif h == 'request-line':   # draft-00, draft-01
+                raise KeyError('method and path arguments required when using "(request-line)"')
+            signable_list.append('%s: %s %s' % (header, method.lower(), path))
+        elif header == 'request-line':   # draft-00, draft-01
             if not method or not path or not http_version:
-                raise Exception('method and path arguments required when using "request-line"')
+                raise KeyError('method and path arguments required when using "request-line"')
             signable_list.append('%s %s %s' % (method, path, http_version))
 
-        elif h == 'host':
+        elif header == 'host':
             # 'host' special case due to requests lib restrictions
             # 'host' is not available when adding auth so must use a param
             # if no param used, defaults back to the 'host' header
             if not host:
                 if 'host' in headers:
-                    host = headers[h]
+                    host = headers[header]
                 else:
-                    raise Exception('missing required header "%s"' % (h))
-            signable_list.append('%s: %s' % (h, host))
+                    raise KeyError('missing required header "%s"' % (header))
+            signable_list.append('%s: %s' % (header, host))
         else:
-            if h not in headers:
-                raise Exception('missing required header "%s"' % (h))
+            if header not in headers:
+                raise KeyError('missing required header "%s"' % (header))
 
-            signable_list.append('%s: %s' % (h, headers[h]))
+            signable_list.append('%s: %s' % (header, headers[header]))
 
-    signable = '\n'.join(signable_list).encode("ascii")
+    signable = '\n'.join(signable_list).encode('ascii')
     return signable
 
 
 def parse_authorization_header(header):
     if not isinstance(header, six.string_types):
-        header = header.decode("ascii") #HTTP headers cannot be Unicode.
+        header = header.decode('ascii')  # HTTP headers cannot be Unicode.
 
-    auth = header.split(" ", 1)
+    auth = header.split(' ', 1)
     if len(auth) > 2:
         raise ValueError('Invalid authorization header. (eg. Method key1=value1,key2="value, \"2\"")')
 
@@ -100,7 +95,7 @@ def parse_authorization_header(header):
     values = {}
     if len(auth) == 2:
         auth_value = auth[1]
-        if auth_value and len(auth_value):
+        if auth_value:
             # This is tricky string magic.  Let urllib do it.
             fields = parse_http_list(auth_value)
 
@@ -138,8 +133,8 @@ def build_signature_template(key_id, algorithm, headers):
     if headers:
         headers = [h.lower() for h in headers]
         param_map['headers'] = ' '.join(headers)
-    kv = map('{0[0]}="{0[1]}"'.format, param_map.items())
-    kv_string = ','.join(kv)
+    kv_pairs = map('{0[0]}="{0[1]}"'.format, param_map.items())
+    kv_string = ','.join(kv_pairs)
     sig_string = 'Signature {0}'.format(kv_string)
     return sig_string
 
@@ -160,6 +155,7 @@ class CaseInsensitiveDict(dict):
     def __contains__(self, key):
         return super(CaseInsensitiveDict, self).__contains__(key.lower())
 
+
 # currently busted...
 def get_fingerprint(key):
     """
@@ -177,4 +173,4 @@ def get_fingerprint(key):
     key = key.strip().encode('ascii')
     key = base64.b64decode(key)
     fp_plain = hashlib.md5(key).hexdigest()
-    return ':'.join(a+b for a,b in zip(fp_plain[::2], fp_plain[1::2]))
+    return ':'.join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
