@@ -68,3 +68,49 @@ class TestSign(unittest.TestCase):
         self.assertEqual(params['algorithm'], 'rsa-sha256')
         self.assertEqual(params['headers'], '(request-target) host date content-type content-md5 content-length')
         self.assertEqual(params['signature'], 'G8/Uh6BBDaqldRi3VfFfklHSFoq8CMt5NUZiepq0q66e+fS3Up3BmXn0NbUnr3L1WgAAZGplifRAJqp2LgeZ5gXNk6UX9zV3hw5BERLWscWXlwX/dvHQES27lGRCvyFv3djHP6Plfd5mhPWRkmjnvqeOOSS0lZJYFYHJz994s6w=')
+
+    def test_PASS_verify_headers_by_draft_version(self):
+        testcases = {
+            'draft-00': 'request-line',
+            'draft-01': 'request-line',
+            'draft-02': '(request-line)',
+            'draft-03': '(request-target)',
+            'draft-04': '(request-target)',
+            'draft-05': '(request-target)',
+            'draft-06': '(request-target)',
+            'draft-07': '(request-target)'
+        }
+        for draft, header_req in testcases.items():
+            hs = sign.HeaderSigner(key_id='Test', secret=self.key, version=draft, headers=[
+                header_req,
+                'host',
+                'date',
+                'content-type',
+                'content-md5',
+                'content-length'
+            ])
+
+    def test_FAIL_verify_headers_by_draft_version(self):
+        testcases = [
+            ('draft-00', '(request-line)'),
+            ('draft-00', '(request-target)'),
+            ('draft-01', '(request-line)'),
+            ('draft-01', '(request-target)'),
+            ('draft-02', 'request-line'),
+            ('draft-02', '(request-target)'),
+            ('draft-03', 'request-line'),
+            ('draft-03', '(request-line)'),
+        ]
+        for draft, header_req in testcases:
+            try:
+                sign.HeaderSigner(key_id='Test', secret=self.key, version=draft, headers=[
+                    header_req,
+                    'host',
+                    'date',
+                    'content-type',
+                    'content-md5',
+                    'content-length'
+                ])
+                self.fail('Should raise KeyError in (%s, %s)' % (draft, header_req))
+            except KeyError:
+                pass

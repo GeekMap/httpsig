@@ -9,7 +9,8 @@ from .utils import ALGORITHMS, HASHES, HttpSigException, build_signature_templat
 
 
 DEFAULT_SIGN_ALGORITHM = 'hmac-sha256'
-DEFAULT_VERSION = 'draft-07'
+DEFAULT_DRAFT_VERSION = 'draft-07'
+SUPPORTED_DRAFT_VERSION = ['draft-00', 'draft-01', 'draft-02', 'draft-03', 'draft-04', 'draft-05', 'draft-06', 'draft-07']
 
 
 class Signer(object):
@@ -86,14 +87,18 @@ class HeaderSigner(Signer):
     :arg algorithm: one of the six specified algorithms
     :arg headers:   a list of http headers to be included in the signing string, defaulting to ['date'].
     '''
-    def __init__(self, key_id, secret, algorithm=None, headers=None, version=DEFAULT_VERSION):
+    def __init__(self, key_id, secret, algorithm=None, headers=None, version=DEFAULT_DRAFT_VERSION):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(key_id, algorithm, headers)
-        self.version = version
+        if version in SUPPORTED_DRAFT_VERSION:
+            self.version = version
+        else:
+            self.version = DEFAULT_DRAFT_VERSION
+        self._verify_headers_by_draft_version()
 
     def sign(self, headers, host=None, method=None, path=None):
         """
@@ -105,10 +110,21 @@ class HeaderSigner(Signer):
         path is the HTTP path (required when using '(request-target)').
         """
         headers = CaseInsensitiveDict(headers)
-        required_headers = self.headers or ['date']
-        signable = generate_message(required_headers, headers, host, method, path)
+        signable = generate_message(self.headers, headers, host, method, path)
 
         signature = self._sign(signable)
         headers['authorization'] = self.signature_template % signature
 
         return headers
+
+    def _verify_headers_by_draft_version(self):
+        HEADER_MAPING = {
+            'request-line': ['draft-00', 'draft-01'],
+            '(request-line)': ['draft-02'],
+            '(request-target)': ['draft-03', 'draft-04', 'draft-05', 'draft-06', 'draft-07']
+        }
+
+        for header, drafts in HEADER_MAPING.items():
+            if header in self.headers:
+                if self.version not in drafts:
+                    raise KeyError('%s is not supported by %s' % (header, self.version))
