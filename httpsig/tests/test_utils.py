@@ -38,11 +38,11 @@ class TestUtils(unittest.TestCase):
             '(request-target) host date digest content-length': b'(request-target): post /foo\nhost: example.org\ndate: Tue, 07 Jun 2014 20:51:35 GMT\ndigest: SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=\ncontent-length: 18'
         }
 
-        for required_headers, result in cases.items():    
+        for required_headers, result in cases.items():
             assert httpsig.utils.generate_message(
                 required_headers=required_headers.split(),
                 headers=HEADERS,
                 host=HOST,
                 method=METHOD,
                 path=PATH,
-                http_version=HTTP_VERSION) == result
+                http_version=HTTP_VERSION) == result, 'header: %s\nexpect: %s\n' % (required_headers, result)
