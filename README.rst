@@ -5,13 +5,13 @@ httpsig
     :target: https://travis-ci.org/GeekMap/httpsig
 
 .. image:: https://coveralls.io/repos/github/GeekMap/httpsig/badge.svg?branch=master
-:target: https://coveralls.io/github/GeekMap/httpsig?branch=master
+    :target: https://coveralls.io/github/GeekMap/httpsig?branch=master
 
 .. image:: https://travis-ci.org/GeekMap/httpsig.svg?branch=dev
     :target: https://travis-ci.org/GeekMap/httpsig
 
 .. image:: https://coveralls.io/repos/github/GeekMap/httpsig/badge.svg?branch=dev
-:target: https://coveralls.io/github/GeekMap/httpsig?branch=dev
+    :target: https://coveralls.io/github/GeekMap/httpsig?branch=dev
 
 Sign HTTP requests with secure signatures according to the IETF HTTP Signatures specification (`Draft 3`_).  This is a fork of the original module_ to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.  It's being used in production and is actively-developed.
 
@@ -26,7 +26,7 @@ See the original project_, original Python module_, original spec_, and `current
 Requirements
 ------------
 
-* Python 2.7, 3.2, 3.3, 3.4, 3.5, 3.6
+* Python 2.7, 3.3, 3.4, 3.5, 3.6
 * PyCrypto_
 
 Optional:
