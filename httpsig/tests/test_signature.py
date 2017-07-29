@@ -55,7 +55,7 @@ class TestSign(unittest.TestCase):
             'Content-Length': '18',
         }
         signed = hs.sign(unsigned, method='POST', path='/foo?param=value&pet=dog')
-        
+
         self.assertIn('Date', signed)
         self.assertEqual(unsigned['Date'], signed['Date'])
         self.assertIn('Authorization', signed)

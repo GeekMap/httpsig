@@ -185,4 +185,3 @@ def get_versions(default={"version": "unknown", "full": ""}, verbose=False):
     return (versions_from_vcs(tag_prefix, root, verbose)
             or versions_from_parentdir(parentdir_prefix, root, verbose)
             or default)
-

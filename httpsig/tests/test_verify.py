@@ -23,23 +23,23 @@ class BaseTestCase(unittest.TestCase):
         param_dict = {k: v.strip('"') for k, v in param_pairs}
         return param_dict
 
-        
+
 class TestVerifyHMACSHA1(BaseTestCase):
     def setUp(self):
         secret = b"something special goes here"
-        
+
         self.keyId = "Test"
         self.algorithm = "hmac-sha1"
         self.sign_secret = secret
         self.verify_secret = secret
-    
+
     def test_basic_sign(self):
         signer = Signer(secret=self.sign_secret, algorithm=self.algorithm)
         verifier = Verifier(secret=self.verify_secret, algorithm=self.algorithm)
 
         GOOD = b"this is a test"
         BAD = b"this is not the signature you were looking for..."
-        
+
         # generate signed string
         signature = signer._sign(GOOD)
         self.assertTrue(verifier._verify(data=GOOD, signature=signature))
@@ -49,7 +49,7 @@ class TestVerifyHMACSHA1(BaseTestCase):
         unsigned = {
             'Date': 'Thu, 05 Jan 2012 21:31:40 GMT'
         }
-        
+
         hs = HeaderSigner(key_id="Test", secret=self.sign_secret, algorithm=self.algorithm)
         signed = hs.sign(unsigned)
         hv = HeaderVerifier(headers=signed, secret=self.verify_secret)
@@ -75,7 +75,7 @@ class TestVerifyHMACSHA1(BaseTestCase):
             'Content-Length': '18',
         }
         signed = hs.sign(unsigned, method=METHOD, path=PATH)
-        
+
         hv = HeaderVerifier(headers=signed, secret=self.verify_secret, host=HOST, method=METHOD, path=PATH)
         self.assertTrue(hv.verify())
 
@@ -146,11 +146,11 @@ class TestVerifyRSASHA1(TestVerifyHMACSHA1):
         private_key_path = os.path.join(os.path.dirname(__file__), 'rsa_private.pem')
         with open(private_key_path, 'rb') as f:
             private_key = f.read()
-        
+
         public_key_path = os.path.join(os.path.dirname(__file__), 'rsa_public.pem')
         with open(public_key_path, 'rb') as f:
             public_key = f.read()
-        
+
         self.keyId = "Test"
         self.algorithm = "rsa-sha1"
         self.sign_secret = private_key
