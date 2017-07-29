@@ -1,15 +1,11 @@
 """
 Module to assist in verifying a signed header.
 """
+from base64 import b64decode
 import six
 
-from Crypto.Hash import HMAC
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
-from base64 import b64decode
-
 from .sign import Signer
-from .utils import *
+from .utils import HttpSigException, ct_bytes_compare, parse_authorization_header, CaseInsensitiveDict, generate_message
 
 
 class Verifier(Signer):
@@ -25,18 +21,21 @@ class Verifier(Signer):
         `signature` is a base64-encoded signature to verify against `data`
         """
 
-        if isinstance(data, six.string_types): data = data.encode("ascii")
-        if isinstance(signature, six.string_types): signature = signature.encode("ascii")
+        if isinstance(data, six.string_types):
+            data = data.encode('ascii')
+
+        if isinstance(signature, six.string_types):
+            signature = signature.encode('ascii')
 
         if self.sign_algorithm == 'rsa':
-            h = self._hash.new()
-            h.update(data)
-            return self._rsa.verify(h, b64decode(signature))
+            hash_ = self._hash.new()
+            hash_.update(data)
+            return self._rsa.verify(hash_, b64decode(signature))
 
         elif self.sign_algorithm == 'hmac':
-            h = self._sign_hmac(data)
-            s = b64decode(signature)
-            return ct_bytes_compare(h, s)
+            signed_hmac = self._sign_hmac(data)
+            decoded_sig = b64decode(signature)
+            return ct_bytes_compare(signed_hmac, decoded_sig)
 
         else:
             raise HttpSigException("Unsupported algorithm.")
@@ -82,8 +81,8 @@ class HeaderVerifier(Verifier):
         """
         auth_headers = self.auth_dict.get('headers', 'date').split(' ')
 
-        if len(set(self.required_headers) - set(auth_headers)) > 0:
-            raise Exception('{} is a required header(s)'.format(', '.join(set(self.required_headers)-set(auth_headers))))
+        if set(self.required_headers) - set(auth_headers):
+            raise Exception('{} is a required header(s)'.format(', '.join(set(self.required_headers) - set(auth_headers))))
 
         signing_str = generate_message(auth_headers, self.headers, self.host, self.method, self.path)
 
