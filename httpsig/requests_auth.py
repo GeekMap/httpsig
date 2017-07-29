@@ -21,17 +21,16 @@ class HTTPSignatureAuth(AuthBase):
     '''
     def __init__(self, key_id='', secret='', algorithm=None, headers=None, version=DEFAULT_VERSION):
         headers = headers or []
-        self.header_signer = HeaderSigner(key_id=key_id, secret=secret,
-                algorithm=algorithm, headers=headers, version=version)
+        self.header_signer = HeaderSigner(key_id=key_id, secret=secret, algorithm=algorithm, headers=headers, version=version)
         self.uses_host = 'host' in [h.lower() for h in headers]
 
-    def __call__(self, r):
+    def __call__(self, request):
         headers = self.header_signer.sign(
-                r.headers,
-                # 'Host' header unavailable in request object at this point
-                # if 'host' header is needed, extract it from the url
-                host=urlparse(r.url).netloc if self.uses_host else None,
-                method=r.method,
-                path=r.path_url)
-        r.headers.update(headers)
-        return r
+            request.headers,
+            # 'Host' header unavailable in request object at this point
+            # if 'host' header is needed, extract it from the url
+            host=urlparse(request.url).netloc if self.uses_host else None,
+            method=request.method,
+            path=request.path_url)
+        request.headers.update(headers)
+        return request
