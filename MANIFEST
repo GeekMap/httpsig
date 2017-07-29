@@ -15,6 +15,6 @@ httpsig/verify.py
 httpsig/tests/__init__.py
 httpsig/tests/rsa_private.pem
 httpsig/tests/rsa_public.pem
-httpsig/tests/test_signature.py
+httpsig/tests/test_sign.py
 httpsig/tests/test_utils.py
 httpsig/tests/test_verify.py
