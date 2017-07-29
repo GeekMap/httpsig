@@ -5,10 +5,10 @@ from Crypto.Hash import HMAC
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 
-from .utils import *
+from .utils import ALGORITHMS, HASHES, HttpSigException, build_signature_template, CaseInsensitiveDict, generate_message
 
 
-DEFAULT_SIGN_ALGORITHM = "hmac-sha256"
+DEFAULT_SIGN_ALGORITHM = 'hmac-sha256'
 DEFAULT_VERSION = 'draft-07'
 
 
@@ -23,8 +23,9 @@ class Signer(object):
         if algorithm is None:
             algorithm = DEFAULT_SIGN_ALGORITHM
 
-        assert algorithm in ALGORITHMS, "Unknown algorithm"
-        if isinstance(secret, six.string_types): secret = secret.encode("ascii")
+        assert algorithm in ALGORITHMS, 'Unknown algorithm'
+        if isinstance(secret, six.string_types):
+            secret = secret.encode('ascii')
 
         self._rsa = None
         self._hash = None
@@ -36,7 +37,7 @@ class Signer(object):
                 self._rsa = PKCS1_v1_5.new(rsa_key)
                 self._hash = HASHES[self.hash_algorithm]
             except ValueError:
-                raise HttpSigException("Invalid key.")
+                raise HttpSigException('Invalid key.')
 
         elif self.sign_algorithm == 'hmac':
             self._hash = HMAC.new(secret, digestmod=HASHES[self.hash_algorithm])
@@ -46,19 +47,25 @@ class Signer(object):
         return '%s-%s' % (self.sign_algorithm, self.hash_algorithm)
 
     def _sign_rsa(self, data):
-        if isinstance(data, six.string_types): data = data.encode("ascii")
-        h = self._hash.new()
-        h.update(data)
-        return self._rsa.sign(h)
+        if isinstance(data, six.string_types):
+            data = data.encode('ascii')
+
+        _hash = self._hash.new()
+        _hash.update(data)
+        return self._rsa.sign(_hash)
 
     def _sign_hmac(self, data):
-        if isinstance(data, six.string_types): data = data.encode("ascii")
+        if isinstance(data, six.string_types):
+            data = data.encode('ascii')
+
         hmac = self._hash.copy()
         hmac.update(data)
         return hmac.digest()
 
     def _sign(self, data):
-        if isinstance(data, six.string_types): data = data.encode("ascii")
+        if isinstance(data, six.string_types):
+            data = data.encode('ascii')
+
         signed = None
         if self._rsa:
             signed = self._sign_rsa(data)
@@ -66,7 +73,7 @@ class Signer(object):
             signed = self._sign_hmac(data)
         if not signed:
             raise SystemError('No valid encryptor found.')
-        return base64.b64encode(signed).decode("ascii")
+        return base64.b64encode(signed).decode('ascii')
 
 
 class HeaderSigner(Signer):
