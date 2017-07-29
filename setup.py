@@ -45,5 +45,6 @@ setup(
     include_package_data=True,
     zip_safe=True,
     install_requires=['pycrypto', 'six'],
-    test_suite="httpsig.tests",
+    test_suite='nose.collector',
+    tests_require=['nose']
 )
