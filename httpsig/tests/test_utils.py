@@ -5,7 +5,6 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import unittest
-
 import httpsig.utils
 
 
@@ -21,7 +20,7 @@ class TestUtils(unittest.TestCase):
         HOST = "example.org"
         METHOD = "POST"
         PATH = '/foo'
-        HTTP_VERSION='HTTP/1.1'
+        HTTP_VERSION = 'HTTP/1.1'
         HEADERS = {
             'Host': 'example.org',
             'Date': 'Tue, 07 Jun 2014 20:51:35 GMT',
