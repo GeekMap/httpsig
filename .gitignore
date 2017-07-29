@@ -4,6 +4,7 @@
 *~
 .noseids
 .tox
+.eggs
 build/
 dist/
 doc/__build/*
