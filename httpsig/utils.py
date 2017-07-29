@@ -45,7 +45,8 @@ def ct_bytes_compare(a, b):
 
     return (result == 0)
 
-def generate_message(required_headers, headers, host=None, method=None, path=None):
+
+def generate_message(required_headers, headers, host=None, method=None, path=None, http_version=None):
     headers = CaseInsensitiveDict(headers)
 
     if not required_headers:
@@ -54,10 +55,18 @@ def generate_message(required_headers, headers, host=None, method=None, path=Non
     signable_list = []
     for h in required_headers:
         h = h.lower()
-        if h == '(request-target)':
+        if h == '(request-target)':  # draft-03 to draft-07
             if not method or not path:
                 raise Exception('method and path arguments required when using "(request-target)"')
             signable_list.append('%s: %s %s' % (h, method.lower(), path))
+        elif h == '(request-line)':  # draft-02
+            if not method or not path:
+                raise Exception('method and path arguments required when using "(request-line)"')
+            signable_list.append('%s: %s %s' % (h, method.lower(), path))
+        elif h == 'request-line':   # draft-00, draft-01
+            if not method or not path or not http_version:
+                raise Exception('method and path arguments required when using "request-line"')
+            signable_list.append('%s %s %s' % (method, path, http_version))
 
         elif h == 'host':
             # 'host' special case due to requests lib restrictions
@@ -111,6 +120,7 @@ def parse_authorization_header(header):
 
     # ("Signature", {"headers": "date", "algorithm": "hmac-sha256", ... })
     return (auth[0], CaseInsensitiveDict(values))
+
 
 def build_signature_template(key_id, algorithm, headers):
     """
