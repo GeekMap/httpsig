@@ -44,35 +44,32 @@ class Signer(object):
     def algorithm(self):
         return '%s-%s' % (self.sign_algorithm, self.hash_algorithm)
 
-    def _sign_rsa(self, data):
-        if isinstance(data, six.string_types):
-            data = data.encode('ascii')
-
+    def __sign_rsa(self, data):
         _hash = self._hash.new()
         _hash.update(data)
         return self._rsa.sign(_hash)
 
-    def _sign_hmac(self, data):
-        if isinstance(data, six.string_types):
-            data = data.encode('ascii')
-
+    def __sign_hmac(self, data):
         hmac = self._hash.copy()
         hmac.update(data)
         return hmac.digest()
 
     def _sign(self, data):
+        '''return raw signed string'''
+        signed = None
+        if self._rsa:
+            signed = self.__sign_rsa(data)
+        elif self._hash:
+            signed = self.__sign_hmac(data)
+        if not signed:
+            raise SystemError('No valid encryptor found.')
+        return signed
+
+    def sign(self, data):
         if isinstance(data, six.string_types):
             data = data.encode('ascii')
 
-        signed = None
-        if self._rsa:
-            signed = self._sign_rsa(data)
-        elif self._hash:
-            signed = self._sign_hmac(data)
-        if not signed:
-            raise SystemError('No valid encryptor found.')
-        return base64.b64encode(signed).decode('ascii')
-
+        return base64.b64encode(self._sign(data)).decode('ascii')
 
 class HeaderSigner(Signer):
     '''
@@ -106,7 +103,7 @@ class HeaderSigner(Signer):
         headers = CaseInsensitiveDict(headers)
         signable = generate_message(self.headers, headers, host, method, path)
 
-        signature = self._sign(signable)
+        signature = super(HeaderSigner, self).sign(signable)
         headers['authorization'] = self.signature_template % signature
 
         return headers

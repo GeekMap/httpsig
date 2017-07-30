@@ -47,7 +47,7 @@ class TestVerifyHMACSHA1(BaseTestCase):
             bad_test_cases = [u'this is not the signature you were looking for...', 'this is not the signature you were looking for...']
 
         # generate signed string
-        signature = signer._sign(good_case)
+        signature = signer.sign(good_case)
         self.assertTrue(verifier._verify(data=good_case, signature=signature))
         for case in bad_test_cases:
             self.assertFalse(verifier._verify(data=case, signature=signature))

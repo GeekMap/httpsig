@@ -33,7 +33,7 @@ class Verifier(Signer):
             return self._rsa.verify(hash_, b64decode(signature))
 
         elif self.sign_algorithm == 'hmac':
-            signed_hmac = self._sign_hmac(data)
+            signed_hmac = self._sign(data)
             decoded_sig = b64decode(signature)
             return ct_bytes_compare(signed_hmac, decoded_sig)
 
