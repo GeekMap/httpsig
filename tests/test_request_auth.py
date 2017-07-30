@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import sys
 import os
 import unittest
 import requests
@@ -7,7 +6,8 @@ import requests
 from httpsig.requests_auth import HTTPSignatureAuth
 
 
-class TestHTTPSignatureAuth(unittest.TestCase):
+class TestHttpSignatureAuth(unittest.TestCase):
+
     def setUp(self):
         private_key_path = os.path.join(os.path.dirname(__file__), 'rsa_private.pem')
         with open(private_key_path, 'rb') as f:

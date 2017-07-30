@@ -1,13 +1,12 @@
 #!/usr/bin/env python
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+import os
 import json
 import unittest
 
 from httpsig.sign import HeaderSigner, Signer
 from httpsig.verify import HeaderVerifier, Verifier
+
 
 class BaseTestCase(unittest.TestCase):
     def _parse_auth(self, auth):
