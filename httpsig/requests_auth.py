@@ -2,7 +2,7 @@ from requests.auth import AuthBase
 try:
     # Python 3
     from urllib.parse import urlparse
-except ImportError:
+except ImportError:  # pragma: no cover
     # Python 2
     from urlparse import urlparse
 
