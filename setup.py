@@ -45,5 +45,5 @@ setup(
     zip_safe=True,
     install_requires=['pycrypto', 'six'],
     test_suite='nose.collector',
-    tests_require=['nose']
+    tests_require=['nose', 'requests']
 )
