@@ -1,6 +1,16 @@
 httpsig Changes
 ---------------
 
+1.1.3 (2017-July)
+-------------------
+
+* Support IEFT ``draft-00`` to ``draft-07``
+* Python version update: support ``py3.5``, ``py3.6`` and remove ``py3.2`` (due to coverage not supported)
+* Python re-format by using linter.
+* Complete unittest and enhance coverage to over 90%.
+* Bugfix for python3 string encode and decode.
+
+
 1.1.2 (2015-Feb-11)
 -------------------
 
