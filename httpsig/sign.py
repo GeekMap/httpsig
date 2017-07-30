@@ -20,10 +20,7 @@ class Signer(object):
 
     Password-protected keyfiles are not supported.
     """
-    def __init__(self, secret, algorithm=None):
-        if algorithm is None:
-            algorithm = DEFAULT_SIGN_ALGORITHM
-
+    def __init__(self, secret, algorithm=DEFAULT_SIGN_ALGORITHM):
         assert algorithm in ALGORITHMS, 'Unknown algorithm'
         if isinstance(secret, six.string_types):
             secret = secret.encode('ascii')
@@ -87,10 +84,7 @@ class HeaderSigner(Signer):
     :arg algorithm: one of the six specified algorithms
     :arg headers:   a list of http headers to be included in the signing string, defaulting to ['date'].
     '''
-    def __init__(self, key_id, secret, algorithm=None, headers=None, httpsig_version=DEFAULT_HTTPSIG_VERSION):
-        if algorithm is None:
-            algorithm = DEFAULT_SIGN_ALGORITHM
-
+    def __init__(self, key_id, secret, algorithm=DEFAULT_SIGN_ALGORITHM, headers=None, httpsig_version=DEFAULT_HTTPSIG_VERSION):
         super(HeaderSigner, self).__init__(secret=secret, algorithm=algorithm)
         self.headers = headers or ['date']
         self.signature_template = build_signature_template(key_id, algorithm, headers)
