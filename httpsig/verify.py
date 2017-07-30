@@ -58,12 +58,7 @@ class HeaderVerifier(Verifier):
         """
         required_headers = required_headers or ['date']
 
-        auth = parse_authorization_header(headers['authorization'])
-        if len(auth) == 2:
-            self.auth_dict = auth[1]
-        else:
-            raise HttpSigException("Invalid authorization header.")
-
+        self.auth_dict = parse_authorization_header(headers['authorization'])[1]
         self.headers = CaseInsensitiveDict(headers)
         self.required_headers = [s.lower() for s in required_headers]
         self.method = method

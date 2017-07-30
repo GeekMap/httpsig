@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 import os
-import json
+import six
 import unittest
 
 from httpsig.sign import HeaderSigner, Signer
 from httpsig.verify import HeaderVerifier, Verifier
+from httpsig.utils import HttpSigException
+import httpsig.utils
 
 
 class BaseTestCase(unittest.TestCase):
@@ -36,13 +38,19 @@ class TestVerifyHMACSHA1(BaseTestCase):
         signer = Signer(secret=self.sign_secret, algorithm=self.algorithm)
         verifier = Verifier(secret=self.verify_secret, algorithm=self.algorithm)
 
-        GOOD = b"this is a test"
-        BAD = b"this is not the signature you were looking for..."
+        good_case = b"this is a test"
+        # BAD = b"this is not the signature you were looking for..."
+
+        if six.PY3:
+            bad_test_cases = ['this is not the signature you were looking for...', b'this is not the signature you were looking for...']
+        if six.PY2:
+            bad_test_cases = [u'this is not the signature you were looking for...', 'this is not the signature you were looking for...']
 
         # generate signed string
-        signature = signer._sign(GOOD)
-        self.assertTrue(verifier._verify(data=GOOD, signature=signature))
-        self.assertFalse(verifier._verify(data=BAD, signature=signature))
+        signature = signer._sign(good_case)
+        self.assertTrue(verifier._verify(data=good_case, signature=signature))
+        for case in bad_test_cases:
+            self.assertFalse(verifier._verify(data=case, signature=signature))
 
     def test_default(self):
         unsigned = {
@@ -128,11 +136,28 @@ class TestVerifyHMACSHA1(BaseTestCase):
         hv = HeaderVerifier(headers=signed, secret=self.verify_secret, method=METHOD, path=PATH, required_headers=['date', '(request-target)'])
         self.assertTrue(hv.verify())
 
+    def test_unsupported_algorithm(self):
+        unsigned = {
+            'Date': 'Thu, 05 Jan 2012 21:31:40 GMT'
+        }
+        weird_algorithm = 'xxx-sha257'
+
+        try:
+            original_algorithms = httpsig.sign.ALGORITHMS
+            httpsig.sign.ALGORITHMS = frozenset([weird_algorithm])
+            Verifier(secret=self.verify_secret, algorithm=weird_algorithm)._verify(data='123', signature='456')
+            self.fail('No exception was raised for false algorithm')
+        except Exception as ex:
+            self.assertIsInstance(ex, HttpSigException)
+        finally:
+            httpsig.sign.ALGORITHMS = original_algorithms
+
 
 class TestVerifyHMACSHA256(TestVerifyHMACSHA1):
     def setUp(self):
         super(TestVerifyHMACSHA256, self).setUp()
         self.algorithm = "hmac-sha256"
+
 
 class TestVerifyHMACSHA512(TestVerifyHMACSHA1):
     def setUp(self):
@@ -155,10 +180,12 @@ class TestVerifyRSASHA1(TestVerifyHMACSHA1):
         self.sign_secret = private_key
         self.verify_secret = public_key
 
+
 class TestVerifyRSASHA256(TestVerifyRSASHA1):
     def setUp(self):
         super(TestVerifyRSASHA256, self).setUp()
         self.algorithm = "rsa-sha256"
+
 
 class TestVerifyRSASHA512(TestVerifyRSASHA1):
     def setUp(self):
