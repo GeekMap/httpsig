@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import os
 import unittest
+import six
 
 import httpsig.sign as sign
-from httpsig.utils import parse_authorization_header
+from httpsig.utils import parse_authorization_header, HttpSigException
 
 
 class TestSign(unittest.TestCase):
@@ -118,3 +119,48 @@ class TestSign(unittest.TestCase):
                 self.fail('Should raise KeyError in (%s, %s)' % (httpsig_version, header_req))
             except KeyError:
                 pass
+
+    def test_signer_init(self):
+
+        signature = 'ksTqAWZHgRktH3uKbXydPNEMqpjqALFiJVJXeCKj8zA='
+        secret = 'i am a secret'
+        data = 'i am some data'
+        algorithm = 'hmac-sha256'
+
+        # test good case: default string type
+        signer = sign.Signer(secret, algorithm=algorithm)
+        self.assertEqual(signer.sign(data), signature)
+        self.assertEqual(signer.algorithm, algorithm)
+
+        # test good case: unicode/byte string type for secret
+        signer = sign.Signer(secret.encode() if six.PY3 else secret.decode(), algorithm=algorithm)
+        self.assertEqual(signer.sign(data), signature)
+
+        # test good case: unicode/byte string type for data
+        signer = sign.Signer(secret, algorithm=algorithm)
+        self.assertEqual(signer.sign(data.encode() if six.PY3 else data.decode()), signature)
+
+        # test invalid hash algorithm
+        weird_algorithm = 'rsa-sha257'
+        original_algorithms = sign.ALGORITHMS
+        sign.ALGORITHMS = frozenset([weird_algorithm])
+        try:
+            signer = sign.Signer(secret, algorithm=weird_algorithm)
+            self.fail('No exception was raised')
+        except Exception as ex:
+            self.assertIsInstance(ex, HttpSigException)
+        finally:
+            sign.ALGORITHMS = original_algorithms
+
+        # test invalid sign algorithm
+        weird_algorithm = 'xxx-sha256'
+        original_algorithms = sign.ALGORITHMS
+        sign.ALGORITHMS = frozenset([weird_algorithm])
+        try:
+            signer = sign.Signer(secret, algorithm=weird_algorithm)
+            signer.sign('nothing')
+            self.fail('No exception was raised')
+        except Exception as ex:
+            self.assertIsInstance(ex, SystemError)
+        finally:
+            sign.ALGORITHMS = original_algorithms
