@@ -5,6 +5,7 @@
 .noseids
 .tox
 .eggs
+.coverage
 build/
 dist/
 doc/__build/*
@@ -12,3 +13,4 @@ doc/__build/*
 *_rsa.pub
 locale/
 pip-log.txt
+MANIFEST

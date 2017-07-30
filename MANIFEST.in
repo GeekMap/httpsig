@@ -1,5 +1,0 @@
-include *.rst
-include *.txt
-include versioneer.py
-include httpsig/_version.py
-include httpsig/tests/*.pem
