@@ -88,17 +88,21 @@ Note that keys and secrets should be bytes objects.  At attempt will be made to 
     httpsig.Signer(secret, algorithm='rsa-sha256')
 
 ``secret``, in the case of an RSA signature, is a string containing private RSA pem. In the case of HMAC, it is a secret password.
-``algorithm`` is one of the six allowed signatures: ``rsa-sha1``, ``rsa-sha256``, ``rsa-sha512``, ``hmac-sha1``, ``hmac-sha256``,
-``hmac-sha512``.
+
+``algorithm`` is one of the six allowed signatures: ``rsa-sha1``, ``rsa-sha256``, ``rsa-sha512``, ``hmac-sha1``, ``hmac-sha256``, ``hmac-sha512``.
 
 
 .. code:: python
 
-    httpsig.requests_auth.HTTPSignatureAuth(key_id, secret, algorithm='rsa-sha256', headers=None)
+    httpsig.requests_auth.HTTPSignatureAuth(key_id, secret, algorithm='rsa-sha256', headers=None, httpsig_version=None)
 
 ``key_id`` is the label by which the server system knows your RSA signature or password.
+
 ``headers`` is the list of HTTP headers that are concatenated and used as signing objects. By default it is the specification's minimum, the ``Date`` HTTP header.
-``secret`` and ``algorithm`` are as above.
+
+``httpsig_version`` is the IEFT version. By default it is ``draft-07`` and allowed: ``draft-00`` to ``draft-07``.
+
+``secret`` and ``algorithm`` are as above. .
 
 Tests
 -----
