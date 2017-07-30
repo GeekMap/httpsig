@@ -7,7 +7,7 @@ import six
 try:
     # Python 3
     from urllib.request import parse_http_list
-except ImportError:
+except ImportError:  # pragma: no cover
     # Python 2
     from urllib2 import parse_http_list
 
@@ -29,9 +29,9 @@ def ct_bytes_compare(byte_l, byte_r):
     http://codahale.com/a-lesson-in-timing-attacks/
     """
     if not isinstance(byte_l, six.binary_type):
-        byte_l = byte_l.decode('utf8')
+        byte_l = byte_l.encode('utf8')
     if not isinstance(byte_r, six.binary_type):
-        byte_r = byte_r.decode('utf8')
+        byte_r = byte_r.encode('utf8')
 
     if len(byte_l) != len(byte_r):
         return False
@@ -60,7 +60,7 @@ def generate_message(required_headers, headers, host=None, method=None, path=Non
             signable_list.append('%s: %s %s' % (header, method.lower(), path))
         elif header == 'request-line':   # draft-00, draft-01
             if not method or not path or not http_version:
-                raise KeyError('method and path arguments required when using "request-line"')
+                raise KeyError('method, path and http_version arguments required when using "request-line"')
             signable_list.append('%s %s %s' % (method, path, http_version))
 
         elif header == 'host':
@@ -88,30 +88,28 @@ def parse_authorization_header(header):
         header = header.decode('ascii')  # HTTP headers cannot be Unicode.
 
     auth = header.split(' ', 1)
-    if len(auth) > 2:
+    if len(auth) < 2:
         raise ValueError('Invalid authorization header. (eg. Method key1=value1,key2="value, \"2\"")')
 
     # Split up any args into a dictionary.
     values = {}
-    if len(auth) == 2:
-        auth_value = auth[1]
-        if auth_value:
-            # This is tricky string magic.  Let urllib do it.
-            fields = parse_http_list(auth_value)
+    auth_value = auth[1]
 
-            for item in fields:
-                # Only include keypairs.
-                if '=' in item:
-                    # Split on the first '=' only.
-                    key, value = item.split('=', 1)
-                    if not (len(key) and len(value)):
-                        continue
+    # This is tricky string magic.  Let urllib do it.
+    fields = parse_http_list(auth_value)
+    for item in fields:
+        # Only include keypairs.
+        if '=' in item:
+            # Split on the first '=' only.
+            key, value = item.split('=', 1)
+            if not (len(key) and len(value)):
+                continue
 
-                    # Unquote values, if quoted.
-                    if value[0] == '"':
-                        value = value[1:-1]
+            # Unquote values, if quoted.
+            if value[0] == '"':
+                value = value[1:-1]
 
-                    values[key] = value
+            values[key] = value
 
     # ("Signature", {"headers": "date", "algorithm": "hmac-sha256", ... })
     return (auth[0], CaseInsensitiveDict(values))
