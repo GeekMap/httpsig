@@ -1,19 +1,11 @@
 httpsig
 =======
 
-:master:
-    .. image:: https://travis-ci.org/GeekMap/httpsig.svg?branch=master
-        :target: https://travis-ci.org/GeekMap/httpsig
+.. image:: https://travis-ci.org/ahknight/httpsig.svg?branch=master
+    :target: https://travis-ci.org/ahknight/httpsig
 
-    .. image:: https://coveralls.io/repos/github/GeekMap/httpsig/badge.svg?branch=master
-        :target: https://coveralls.io/github/GeekMap/httpsig?branch=master
-
-:dev:
-    .. image:: https://travis-ci.org/GeekMap/httpsig.svg?branch=dev
-        :target: https://travis-ci.org/GeekMap/httpsig
-
-    .. image:: https://coveralls.io/repos/github/GeekMap/httpsig/badge.svg?branch=dev
-        :target: https://coveralls.io/github/GeekMap/httpsig?branch=dev
+.. image:: https://travis-ci.org/ahknight/httpsig.svg?branch=develop
+    :target: https://travis-ci.org/ahknight/httpsig
 
 Sign HTTP requests with secure signatures according to the IETF HTTP Signatures specification from draft 00 to 07.  This is a fork of the original module_ to fully support both RSA and HMAC schemes as well as unit test both schemes to prove they work.  It's being used in production and is actively-developed.
 
